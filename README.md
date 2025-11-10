@@ -300,13 +300,6 @@ Para modificar os fluxos:
 2. ✏️ Edite os nós e conexões
 3. 🚀 Clique em "Deploy" para aplicar as mudanças
 
-## 📄 Licença
-
-MIT
-
-## 👤 Autor
-
-Criado como projeto de avaliação técnica.
 
 ## 📝 Notas Importantes
 
