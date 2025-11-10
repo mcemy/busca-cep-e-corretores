@@ -1,0 +1,28 @@
+{
+  "name": "nodered-brazilapi",
+  "version": "1.0.0",
+  "description": "Node-RED application integrating with BrazilAPI for broker catalog and CEP search",
+  "main": "index.js",
+  "scripts": {
+    "start": "node-red",
+    "test": "echo \"No tests specified\""
+  },
+  "keywords": [
+    "node-red",
+    "brazilapi",
+    "cep",
+    "brokers",
+    "mqtt"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-red": "^4.1.1",
+    "node-red-contrib-aedes": "^0.15.0",
+    "node-red-dashboard": "^3.6.6",
+    "node-red-node-sqlite": "^1.1.1"
+  },
+  "overrides": {
+    "ws": "^8.18.0"
+  }
+}

@@ -1,0 +1,284 @@
+[
+    {
+        "id": "broker_flow",
+        "type": "tab",
+        "label": "Broker Catalog",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "cep_flow",
+        "type": "tab",
+        "label": "CEP Search",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "mqtt_flow",
+        "type": "tab",
+        "label": "MQTT & Database",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "cep_db",
+        "type": "sqlitedb",
+        "db": "cep_history.db",
+        "mode": "RWC"
+    },
+    {
+        "id": "http_broker_in",
+        "type": "http in",
+        "z": "broker_flow",
+        "name": "GET /brokers",
+        "url": "/brokers",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 80,
+        "wires": [
+            [
+                "fetch_brokers"
+            ]
+        ]
+    },
+    {
+        "id": "fetch_brokers",
+        "type": "http request",
+        "z": "broker_flow",
+        "name": "Fetch Brokers from BrazilAPI",
+        "method": "GET",
+        "ret": "obj",
+        "url": "https://brasilapi.com.br/api/cvm/corretoras/v1",
+        "tls": "",
+        "x": 360,
+        "y": 80,
+        "wires": [
+            [
+                "format_brokers"
+            ]
+        ]
+    },
+    {
+        "id": "format_brokers",
+        "type": "function",
+        "z": "broker_flow",
+        "name": "Format Broker List",
+        "func": "const brokers = msg.payload;\n\nlet html = `\n<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Catálogo de Corretoras</title>\n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n        body {\n            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            min-height: 100vh;\n            padding: 20px;\n        }\n        .container {\n            max-width: 1200px;\n            margin: 0 auto;\n            background: white;\n            border-radius: 15px;\n            box-shadow: 0 20px 60px rgba(0,0,0,0.3);\n            overflow: hidden;\n        }\n        .header {\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            color: white;\n            padding: 30px;\n            text-align: center;\n        }\n        .header h1 {\n            font-size: 2.5em;\n            margin-bottom: 10px;\n        }\n        .header p {\n            font-size: 1.1em;\n            opacity: 0.9;\n        }\n        .stats {\n            background: #f8f9fa;\n            padding: 20px 30px;\n            border-bottom: 2px solid #e9ecef;\n            display: flex;\n            justify-content: space-between;\n            align-items: center;\n        }\n        .stats-item {\n            font-size: 1.1em;\n            color: #495057;\n        }\n        .stats-item strong {\n            color: #667eea;\n            font-size: 1.3em;\n        }\n        .broker-list {\n            padding: 30px;\n        }\n        .broker-item {\n            background: #f8f9fa;\n            padding: 20px;\n            margin-bottom: 15px;\n            border-radius: 10px;\n            border-left: 4px solid #667eea;\n            transition: all 0.3s ease;\n            display: flex;\n            justify-content: space-between;\n            align-items: center;\n        }\n        .broker-item:hover {\n            transform: translateX(5px);\n            box-shadow: 0 5px 15px rgba(0,0,0,0.1);\n            background: #e9ecef;\n        }\n        .broker-info {\n            flex: 1;\n        }\n        .broker-name {\n            font-size: 1.2em;\n            font-weight: bold;\n            color: #212529;\n            margin-bottom: 5px;\n        }\n        .broker-details {\n            color: #6c757d;\n            font-size: 0.95em;\n        }\n        .broker-badge {\n            background: #667eea;\n            color: white;\n            padding: 5px 15px;\n            border-radius: 20px;\n            font-size: 0.85em;\n            font-weight: bold;\n        }\n        .search-box {\n            padding: 20px 30px;\n            background: #f8f9fa;\n            border-bottom: 2px solid #e9ecef;\n        }\n        .search-box input {\n            width: 100%;\n            padding: 15px;\n            border: 2px solid #dee2e6;\n            border-radius: 8px;\n            font-size: 1em;\n            transition: border 0.3s ease;\n        }\n        .search-box input:focus {\n            outline: none;\n            border-color: #667eea;\n        }\n        .footer {\n            background: #f8f9fa;\n            padding: 20px;\n            text-align: center;\n            color: #6c757d;\n            border-top: 2px solid #e9ecef;\n        }\n        @media (max-width: 768px) {\n            .header h1 {\n                font-size: 1.8em;\n            }\n            .broker-item {\n                flex-direction: column;\n                align-items: flex-start;\n            }\n            .broker-badge {\n                margin-top: 10px;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>📊 Catálogo de Corretoras</h1>\n            <p>Dados fornecidos pela BrazilAPI</p>\n        </div>\n        \n        <div class=\"stats\">\n            <div class=\"stats-item\">\n                <strong>${brokers.length}</strong> corretoras encontradas\n            </div>\n            <div class=\"stats-item\">\n                Fonte: CVM (Comissão de Valores Mobiliários)\n            </div>\n        </div>\n        \n        <div class=\"search-box\">\n            <input type=\"text\" id=\"searchInput\" placeholder=\"🔍 Buscar por nome, cidade ou CNPJ...\" onkeyup=\"filterBrokers()\">\n        </div>\n        \n        <div class=\"broker-list\" id=\"brokerList\">\n`;\n\nbrokers.forEach((broker, index) => {\n    const name = broker.nome_social || broker.nome_comercial || 'N/A';\n    const city = broker.municipio || 'N/A';\n    const cnpj = broker.cnpj || 'N/A';\n    const code = broker.codigo_cvm || 'N/A';\n    \n    html += `\n            <div class=\"broker-item\" data-search=\"${name.toLowerCase()} ${city.toLowerCase()} ${cnpj}\">\n                <div class=\"broker-info\">\n                    <div class=\"broker-name\">${name}</div>\n                    <div class=\"broker-details\">${city} / ${cnpj}</div>\n                </div>\n                <div class=\"broker-badge\">CVM: ${code}</div>\n            </div>\n    `;\n});\n\nhtml += `\n        </div>\n        \n        <div class=\"footer\">\n            <p>💼 Node-RED + BrazilAPI Integration | Última atualização: ${new Date().toLocaleString('pt-BR')}</p>\n        </div>\n    </div>\n    \n    <script>\n        function filterBrokers() {\n            const input = document.getElementById('searchInput');\n            const filter = input.value.toLowerCase();\n            const brokerList = document.getElementById('brokerList');\n            const items = brokerList.getElementsByClassName('broker-item');\n            \n            let visibleCount = 0;\n            \n            for (let i = 0; i < items.length; i++) {\n                const searchData = items[i].getAttribute('data-search');\n                if (searchData.indexOf(filter) > -1) {\n                    items[i].style.display = \"\";\n                    visibleCount++;\n                } else {\n                    items[i].style.display = \"none\";\n                }\n            }\n        }\n    </script>\n</body>\n</html>\n`;\n\nmsg.payload = html;\nmsg.statusCode = 200;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 620,
+        "y": 80,
+        "wires": [
+            [
+                "http_broker_out"
+            ]
+        ]
+    },
+    {
+        "id": "http_broker_out",
+        "type": "http response",
+        "z": "broker_flow",
+        "name": "Return HTML",
+        "statusCode": "",
+        "headers": {
+            "content-type": "text/html"
+        },
+        "x": 830,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "http_cep_param_in",
+        "type": "http in",
+        "z": "cep_flow",
+        "name": "GET /cep/:zipcode",
+        "url": "/cep/:zipcode",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 80,
+        "wires": [
+            [
+                "extract_zipcode_param"
+            ]
+        ]
+    },
+    {
+        "id": "extract_zipcode_param",
+        "type": "function",
+        "z": "cep_flow",
+        "name": "Extract Zipcode",
+        "func": "const zipcode = msg.req.params.zipcode.replace(/\\D/g, '');\nmsg.zipcode = zipcode;\nmsg.url = `https://brasilapi.com.br/api/cep/v2/${zipcode}`;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 370,
+        "y": 80,
+        "wires": [
+            [
+                "fetch_cep"
+            ]
+        ]
+    },
+    {
+        "id": "fetch_cep",
+        "type": "http request",
+        "z": "cep_flow",
+        "name": "Fetch CEP from BrazilAPI",
+        "method": "GET",
+        "ret": "obj",
+        "url": "",
+        "tls": "",
+        "x": 590,
+        "y": 80,
+        "wires": [
+            [
+                "format_cep_response"
+            ]
+        ]
+    },
+    {
+        "id": "format_cep_response",
+        "type": "function",
+        "z": "cep_flow",
+        "name": "Format CEP Response",
+        "func": "const data = msg.payload;\nconst zipcode = msg.zipcode;\n\nlet html;\n\nif (data.errors || data.message) {\n    html = `\n<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>CEP não encontrado</title>\n    <style>\n        body {\n            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);\n            min-height: 100vh;\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            padding: 20px;\n        }\n        .error-container {\n            background: white;\n            padding: 40px;\n            border-radius: 15px;\n            box-shadow: 0 20px 60px rgba(0,0,0,0.3);\n            text-align: center;\n            max-width: 500px;\n        }\n        .error-icon {\n            font-size: 5em;\n            margin-bottom: 20px;\n        }\n        h1 {\n            color: #f5576c;\n            margin-bottom: 20px;\n        }\n        p {\n            color: #6c757d;\n            font-size: 1.1em;\n            margin-bottom: 30px;\n        }\n        .btn {\n            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);\n            color: white;\n            padding: 12px 30px;\n            border: none;\n            border-radius: 25px;\n            font-size: 1em;\n            cursor: pointer;\n            text-decoration: none;\n            display: inline-block;\n        }\n        .btn:hover {\n            transform: translateY(-2px);\n            box-shadow: 0 5px 15px rgba(0,0,0,0.2);\n        }\n    </style>\n</head>\n<body>\n    <div class=\"error-container\">\n        <div class=\"error-icon\">❌</div>\n        <h1>CEP não encontrado</h1>\n        <p>O CEP <strong>${zipcode}</strong> não foi encontrado na base de dados.</p>\n        <a href=\"/search-cep\" class=\"btn\">Tentar outro CEP</a>\n    </div>\n</body>\n</html>\n    `;\n} else {\n    // Verificar se coordenadas existem na resposta da API\n    const hasLocation = data.location && \n                       data.location.coordinates && \n                       data.location.coordinates.latitude && \n                       data.location.coordinates.longitude;\n    \n    let lat = hasLocation ? data.location.coordinates.latitude : null;\n    let lon = hasLocation ? data.location.coordinates.longitude : null;\n    \n    // Se não tem coordenadas, vamos buscar via geocoding\n    const needsGeocoding = !hasLocation;\n    \n    html = `\n<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Resultado CEP: ${data.cep}</title>\n    \n    <!-- Leaflet CSS -->\n    <link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\" />\n    <!-- Leaflet JS -->\n    <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script>\n    \n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n        body {\n            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            min-height: 100vh;\n            padding: 20px;\n        }\n        .container {\n            max-width: 800px;\n            margin: 0 auto;\n            background: white;\n            border-radius: 15px;\n            box-shadow: 0 20px 60px rgba(0,0,0,0.3);\n            overflow: hidden;\n        }\n        .header {\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            color: white;\n            padding: 30px;\n            text-align: center;\n        }\n        .header h1 {\n            font-size: 2.5em;\n            margin-bottom: 10px;\n        }\n        .content {\n            padding: 40px;\n        }\n        .info-card {\n            background: #f8f9fa;\n            padding: 25px;\n            border-radius: 10px;\n            margin-bottom: 20px;\n            border-left: 4px solid #667eea;\n        }\n        .info-row {\n            display: flex;\n            padding: 15px 0;\n            border-bottom: 1px solid #e9ecef;\n        }\n        .info-row:last-child {\n            border-bottom: none;\n        }\n        .info-label {\n            font-weight: bold;\n            color: #495057;\n            width: 150px;\n            flex-shrink: 0;\n        }\n        .info-value {\n            color: #212529;\n            flex: 1;\n        }\n        .map-container {\n            margin-top: 20px;\n            border-radius: 10px;\n            overflow: hidden;\n            height: 400px;\n            border: 2px solid #e9ecef;\n            position: relative;\n        }\n        #map {\n            width: 100%;\n            height: 100%;\n        }\n        .loading-map {\n            position: absolute;\n            top: 0;\n            left: 0;\n            width: 100%;\n            height: 100%;\n            background: rgba(255,255,255,0.9);\n            display: flex;\n            flex-direction: column;\n            justify-content: center;\n            align-items: center;\n            z-index: 1000;\n        }\n        .spinner {\n            border: 4px solid #f3f3f3;\n            border-top: 4px solid #667eea;\n            border-radius: 50%;\n            width: 50px;\n            height: 50px;\n            animation: spin 1s linear infinite;\n            margin-bottom: 15px;\n        }\n        @keyframes spin {\n            0% { transform: rotate(0deg); }\n            100% { transform: rotate(360deg); }\n        }\n        .btn-container {\n            display: flex;\n            gap: 15px;\n            margin-top: 30px;\n        }\n        .btn {\n            flex: 1;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            color: white;\n            padding: 15px;\n            border: none;\n            border-radius: 10px;\n            font-size: 1em;\n            cursor: pointer;\n            text-decoration: none;\n            text-align: center;\n            transition: all 0.3s ease;\n        }\n        .btn:hover {\n            transform: translateY(-2px);\n            box-shadow: 0 5px 15px rgba(0,0,0,0.3);\n        }\n        .btn-secondary {\n            background: #6c757d;\n        }\n        #coordText {\n            color: #667eea;\n            font-weight: bold;\n        }\n        @media (max-width: 768px) {\n            .info-row {\n                flex-direction: column;\n            }\n            .info-label {\n                width: 100%;\n                margin-bottom: 5px;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>📍 ${data.cep}</h1>\n            <p>Informações do CEP</p>\n        </div>\n        \n        <div class=\"content\">\n            <div class=\"info-card\">\n                <div class=\"info-row\">\n                    <div class=\"info-label\">CEP:</div>\n                    <div class=\"info-value\">${data.cep}</div>\n                </div>\n                <div class=\"info-row\">\n                    <div class=\"info-label\">Logradouro:</div>\n                    <div class=\"info-value\">${data.street || 'N/A'}</div>\n                </div>\n                <div class=\"info-row\">\n                    <div class=\"info-label\">Bairro:</div>\n                    <div class=\"info-value\">${data.neighborhood || 'N/A'}</div>\n                </div>\n                <div class=\"info-row\">\n                    <div class=\"info-label\">Cidade:</div>\n                    <div class=\"info-value\">${data.city || 'N/A'}</div>\n                </div>\n                <div class=\"info-row\">\n                    <div class=\"info-label\">Estado:</div>\n                    <div class=\"info-value\">${data.state || 'N/A'}</div>\n                </div>\n                <div class=\"info-row\">\n                    <div class=\"info-label\">Coordenadas:</div>\n                    <div class=\"info-value\" id=\"coordText\">\n                        ${hasLocation ? `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}` : 'Buscando coordenadas...'}\n                    </div>\n                </div>\n            </div>\n            \n            <div class=\"map-container\">\n                <div id=\"map\"></div>\n                ${needsGeocoding ? '<div class=\"loading-map\" id=\"loadingMap\"><div class=\"spinner\"></div><p>Carregando mapa...</p></div>' : ''}\n            </div>\n            \n            <div class=\"btn-container\">\n                <a href=\"/search-cep\" class=\"btn\">Nova Busca</a>\n                <a href=\"/brokers\" class=\"btn btn-secondary\">Ver Corretoras</a>\n            </div>\n        </div>\n    </div>\n    \n    <script>\n        ${needsGeocoding ? `\n        // Buscar coordenadas via Nominatim (OpenStreetMap)\n        async function getCoordinates() {\n            const address = \"${data.street || ''}, ${data.neighborhood || ''}, ${data.city || ''}, ${data.state || ''}, Brasil\";\n            const url = \\`https://nominatim.openstreetmap.org/search?format=json&q=\\${encodeURIComponent(address)}&limit=1\\`;\n            \n            try {\n                const response = await fetch(url);\n                const results = await response.json();\n                \n                if (results && results.length > 0) {\n                    const lat = parseFloat(results[0].lat);\n                    const lon = parseFloat(results[0].lon);\n                    \n                    // Atualizar texto de coordenadas\n                    document.getElementById('coordText').textContent = \\`Lat: \\${lat.toFixed(6)}, Lon: \\${lon.toFixed(6)}\\`;\n                    \n                    // Remover loading\n                    const loading = document.getElementById('loadingMap');\n                    if (loading) loading.remove();\n                    \n                    // Inicializar mapa\n                    initMap(lat, lon);\n                } else {\n                    throw new Error('Não foi possível encontrar coordenadas');\n                }\n            } catch (error) {\n                console.error('Erro ao buscar coordenadas:', error);\n                document.getElementById('coordText').textContent = 'Coordenadas não disponíveis';\n                const loading = document.getElementById('loadingMap');\n                if (loading) {\n                    loading.innerHTML = '<p style=\"color: #f5576c;\">❌ Não foi possível carregar o mapa</p>';\n                }\n            }\n        }\n        \n        function initMap(lat, lon) {\n            const map = L.map('map').setView([lat, lon], 15);\n            \n            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {\n                attribution: '&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>',\n                maxZoom: 19\n            }).addTo(map);\n            \n            const marker = L.marker([lat, lon]).addTo(map);\n            marker.bindPopup('<b>${data.street || 'Localização'}</b><br>${data.neighborhood || ''}<br>${data.city || ''} - ${data.state || ''}').openPopup();\n        }\n        \n        // Buscar coordenadas quando a página carregar\n        getCoordinates();\n        ` : `\n        // Coordenadas já disponíveis da API\n        const map = L.map('map').setView([${lat}, ${lon}], 15);\n        \n        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {\n            attribution: '&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>',\n            maxZoom: 19\n        }).addTo(map);\n        \n        const marker = L.marker([${lat}, ${lon}]).addTo(map);\n        marker.bindPopup('<b>${data.street || 'Localização'}</b><br>${data.neighborhood || ''}<br>${data.city || ''} - ${data.state || ''}').openPopup();\n        `}\n    </script>\n</body>\n</html>\n    `;\n}\n\nmsg.payload = html;\nmsg.statusCode = data.errors || data.message ? 404 : 200;\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 80,
+        "wires": [
+            [
+                "http_cep_out"
+            ]
+        ]
+    },
+    {
+        "id": "http_cep_out",
+        "type": "http response",
+        "z": "cep_flow",
+        "name": "Return HTML",
+        "statusCode": "",
+        "headers": {
+            "content-type": "text/html"
+        },
+        "x": 1050,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "http_search_form_in",
+        "type": "http in",
+        "z": "cep_flow",
+        "name": "GET /search-cep",
+        "url": "/search-cep",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 200,
+        "wires": [
+            [
+                "return_search_form"
+            ]
+        ]
+    },
+    {
+        "id": "return_search_form",
+        "type": "function",
+        "z": "cep_flow",
+        "name": "Search Form HTML",
+        "func": "msg.payload = `<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1.0'><title>Buscar CEP</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}.container{background:white;border-radius:15px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;width:100%;max-width:600px}.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:40px;text-align:center}.header h1{font-size:2.5em;margin-bottom:10px}.content{padding:40px}.form-group{margin-bottom:25px}label{display:block;font-weight:bold;color:#495057;margin-bottom:10px;font-size:1.1em}input[type='text']{width:100%;padding:15px;border:2px solid #dee2e6;border-radius:10px;font-size:1.1em}.btn{width:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:15px;border:none;border-radius:10px;font-size:1.2em;cursor:pointer;font-weight:bold}.link-btn{display:block;width:100%;background:#6c757d;color:white;padding:12px;border-radius:10px;text-decoration:none;text-align:center;margin-top:20px}</style></head><body><div class='container'><div class='header'><h1>🔍 Buscar CEP</h1><p>Digite um CEP para consultar</p></div><div class='content'><form action='/cep/' method='get' onsubmit='event.preventDefault();window.location.href=\"/cep/\"+document.getElementById(\"cep\").value'><div class='form-group'><label for='cep'>CEP (somente números):</label><input type='text' id='cep' name='cep' placeholder='Ex: 01310100' maxlength='8' required></div><button type='submit' class='btn'>🔍 Buscar CEP</button></form><a href='/brokers' class='link-btn'>📊 Ver Catálogo de Corretoras</a></div></div></body></html>`;\nmsg.statusCode = 200;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 380,
+        "y": 200,
+        "wires": [
+            [
+                "http_search_form_out"
+            ]
+        ]
+    },
+    {
+        "id": "http_search_form_out",
+        "type": "http response",
+        "z": "cep_flow",
+        "name": "Return Form HTML",
+        "statusCode": "",
+        "headers": {
+            "content-type": "text/html"
+        },
+        "x": 610,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "save_to_db",
+        "type": "sqlite",
+        "z": "mqtt_flow",
+        "mydb": "cep_db",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "Save CEP Search",
+        "x": 390,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "init_db",
+        "type": "inject",
+        "z": "mqtt_flow",
+        "name": "Initialize DB on Startup",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 240,
+        "wires": [
+            [
+                "create_table"
+            ]
+        ]
+    },
+    {
+        "id": "create_table",
+        "type": "function",
+        "z": "mqtt_flow",
+        "name": "Create Table Query",
+        "func": "msg.topic = `\nCREATE TABLE IF NOT EXISTS searches (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    zipcode TEXT NOT NULL,\n    result TEXT,\n    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP\n)\n`;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 400,
+        "y": 240,
+        "wires": [
+            [
+                "execute_create"
+            ]
+        ]
+    },
+    {
+        "id": "execute_create",
+        "type": "sqlite",
+        "z": "mqtt_flow",
+        "mydb": "cep_db",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "Execute Create Table",
+        "x": 620,
+        "y": 240,
+        "wires": [
+            []
+        ]
+    }
+]

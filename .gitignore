@@ -1,0 +1,46 @@
+# Node-RED - Arquivos de configuração sensíveis
+.config.json
+.flows.json.backup
+.flows_cred.json
+flows_cred.json
+*_cred.json
+node_modules/
+
+# SQLite Database - Dados locais
+*.db
+*.sqlite
+*.db-journal
+cep_history.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment - NUNCA commitar!
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Sensitive data
+config.json
+secrets.json
+credentials.json
