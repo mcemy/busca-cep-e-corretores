@@ -1,4 +1,4 @@
-# 🇧🇷 BrazilAPI Node-RED Integration
+# BrazilAPI Node-RED Integration
 
 [![Node-RED](https://img.shields.io/badge/Node--RED-v4.1.1-red)](https://nodered.org/)
 [![BrazilAPI](https://img.shields.io/badge/BrazilAPI-v2-green)](https://brasilapi.com.br/)
