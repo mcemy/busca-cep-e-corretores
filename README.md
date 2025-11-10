@@ -14,14 +14,6 @@ Assista ao vídeo de demonstração (40 segundos) mostrando todas as funcionalid
 
 **[🎬 Clique aqui para assistir ao vídeo](https://screenapp.io/app/v/7AwZtwR7CV)**
 
-**O vídeo demonstra:**
-
-- ✅ Catálogo de Corretoras com busca em tempo real
-- ✅ Busca de CEP por URL (Opção 1)
-- ✅ Busca de CEP por formulário (Opção 2)
-- ✅ Mapa interativo com geocoding automático
-- ✅ Tratamento de erros e validações
-
 ## ✨ Funcionalidades Principais
 
 ### 📊 1. Catálogo de Corretoras
